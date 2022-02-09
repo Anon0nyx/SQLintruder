@@ -1,7 +1,7 @@
 <?php
 	$username = "root";
 	$password = "CSisGreat!7951";
-	$server = "localhost";
+	$server = "127.0.0.1";
 	$db_name = "capstone";
 
 	$conn = new mysqli($server, $username, $password, $db_name);
