@@ -1,8 +1,7 @@
 <?php
 	include_once("./database.php");
-	$password = "";
 	
-	if (isset($_POST)) {
+	if (isset($_POST) && !empty($_POST)) {
 		$username = $_POST['username'];
 		$password = $_POST['password'];
 
@@ -28,9 +27,9 @@
 					echo "Registration Failed";
 				}
 			}
-		} else {
-			echo "<h1>Registration</h1>";
 		} 
+	} else {
+			echo "<h1>Registration</h1>";
 	}
 ?>
 <!DOCTYPE html>

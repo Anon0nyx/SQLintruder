@@ -22,7 +22,7 @@
 </head>
 <body>
 	<?php
-		if (isset($_POST)) {
+		if (isset($_POST) && !empty($_POST)) {
 			$username = $_POST['username'];
 			$password = $_POST['password'];
 
@@ -42,14 +42,14 @@
 					echo "<h1>Login Failed..!</h1>";
 		
 				}
-			} else {
-				echo "<h1>Admin Panel Account Login</h1>";
 			}
+		} else {
+			echo "<h1>Account Panel Login</h1>";
 		}
 	?>
     <form  method="POST">
 		<input name="username" placeholder="Username" type="text">
-		<input name="password" placeholder="Password" type="text">
+		<input name="password" placeholder="Password" type="password">
 		<input name="submitBtn" type="submit" value="Submit">
 	</form>
 	<a href="./register.php">Register</a>    
