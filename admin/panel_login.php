@@ -31,20 +31,19 @@
 				$result = $conn->query($query);
 
 				if ($result -> num_rows > 0) {
+					echo "<h1>Login Successful!</h1>";
+					echo "<!-- JSONSTART";
 					while ($row = $result->fetch_assoc()) {
-						echo "<h3>Successful Login</h3>";
-						echo "<h1>Welcome: " . $row['username'] . "</h1>";
-						echo "<h2>Currently your profile information is:</h2>";
-						echo "<h3>ID: " . $row['id'] . "</h3>";
-						echo "<h3>Password: " . $row['password'] . "</h3>";
+						echo "[{'id':'" . $row['id'] . "'},{'username':'" . $row['username'] . "'},{'password':'" . $row['password'] . "'} ]";
 					}
+					echo "JSONEND -->";
 				} else {
-					echo "<h1>Login Failed..!</h1>";
+					echo "<h1>Login Failed..!</h1><br>";
 		
 				}
 			}
 		} else {
-			echo "<h1>Account Panel Login</h1>";
+			echo "<h1>Account Panel Login</h1><br>";
 		}
 	?>
     <form  method="POST">
