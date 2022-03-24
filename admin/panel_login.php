@@ -34,7 +34,7 @@
 					echo "<h1>Login Successful!</h1>";
 					echo "<!-- JSONSTART";
 					while ($row = $result->fetch_assoc()) {
-						echo "[{'id':'" . $row['id'] . "'},{'username':'" . $row['username'] . "'},{'password':'" . $row['password'] . "'} ]";
+						echo "[ userDetails {'id':'" . $row['id'] . "'},{'username':'" . $row['username'] . "'},{'password':'" . $row['password'] . "'} ]";
 					}
 					echo "JSONEND -->";
 				} else {
