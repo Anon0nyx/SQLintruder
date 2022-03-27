@@ -32,11 +32,11 @@
 
 				if ($result -> num_rows > 0) {
 					echo "<h1>Login Successful!</h1>";
-					echo "\n<!-- JSONSTART";
+					echo "\n<!-- JSONSTART[";
 					while ($row = $result->fetch_assoc()) {
-						echo "[ userDetails {'id':'" . $row['id'] . "'},{'username':'" . $row['username'] . "'},{'password':'" . $row['password'] . "'} ]";
+						echo '{"id":"' . $row['id'] . '","username":"' . $row['username'] . '","password":"' . $row['password'] . '"}';
 					}
-					echo "JSONEND -->\n";
+					echo "]JSONEND -->\n";
 				} else {
 					echo "<h1>Login Failed..!</h1><br>";
 		
