@@ -267,7 +267,7 @@ func main() {
 			if (good) {
 				fmt.Println("\n*********** BLIND SQLi DISCOVERED, MANUAL TESTER REQUIRED ***********\n");
 			}
-		}
-		fmt.Println("*************************** SQLi NOT FOUND ******************************\n");
+		} else {
+			fmt.Println("\n******************* SQLi NOT DISCOVERED ************************\n");
 	}
 }
